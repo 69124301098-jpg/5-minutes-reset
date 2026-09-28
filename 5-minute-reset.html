@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5-Minute Reset</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:linear-gradient(135deg,#eef8ff,#f5f0ff);
+  color:#263238;min-height:100vh;
+}
+.app{max-width:520px;margin:auto;padding:24px 18px 40px}
+.card{
+  background:rgba(255,255,255,.94);border-radius:28px;padding:26px;
+  box-shadow:0 12px 35px rgba(70,80,120,.12);margin-top:18px;
+}
+.logo{font-size:48px;text-align:center}
+h1{text-align:center;margin:8px 0 6px;font-size:30px}
+.subtitle{text-align:center;color:#68747d;line-height:1.6}
+h2{font-size:21px;margin-top:0}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{
+  border:2px solid #e8edf2;background:white;border-radius:18px;padding:17px 10px;
+  font-size:15px;cursor:pointer;transition:.2s
+}
+.choice:hover,.choice.selected{border-color:#7c8cff;background:#f3f4ff}
+.emoji{font-size:28px;display:block;margin-bottom:7px}
+button{
+  width:100%;border:0;border-radius:18px;padding:16px;font-size:17px;
+  font-weight:700;cursor:pointer;margin-top:16px
+}
+.primary{background:#6878e8;color:white}
+.secondary{background:#edf0f5;color:#445}
+.timer{
+  text-align:center;font-size:58px;font-weight:800;margin:15px 0;
+  font-variant-numeric:tabular-nums
+}
+.progress{height:10px;background:#e9edf3;border-radius:10px;overflow:hidden}
+.bar{height:100%;width:0;background:#6878e8;transition:.3s}
+.activity{text-align:center;padding:18px 4px}
+.activity-icon{font-size:70px}
+.activity h2{font-size:26px;margin:8px 0}
+.instruction{line-height:1.8;color:#5c6870;font-size:16px}
+.hidden{display:none}
+.complete{text-align:center}
+.complete-icon{font-size:70px}
+.small{font-size:13px;color:#7a858d;text-align:center;margin-top:15px}
+.back{background:none;color:#6878e8;margin-top:8px}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- HOME -->
+  <section id="home" class="card">
+    <div class="logo">🧠</div>
+    <h1>5-Minute Reset</h1>
+    <p class="subtitle">
+      พักเพียง 5 นาที เพื่อรีเซ็ตร่างกายและจิตใจ<br>
+      แล้วกลับไปเรียนต่ออย่างพร้อมขึ้น
+    </p>
+
+    <h2>ตอนนี้คุณอยากพักเพราะอะไร?</h2>
+
+    <div class="choices">
+      <button class="choice" data-mode="eye" onclick="selectMode(this)">
+        <span class="emoji">👁️</span>ล้าสายตา
+      </button>
+      <button class="choice" data-mode="body" onclick="selectMode(this)">
+        <span class="emoji">💪</span>เมื่อยล้า
+      </button>
+      <button class="choice" data-mode="stress" onclick="selectMode(this)">
+        <span class="emoji">🧘</span>เครียด/เหนื่อย
+      </button>
+      <button class="choice" data-mode="random" onclick="selectMode(this)">
+        <span class="emoji">✨</span>พักทั่วไป
+      </button>
+    </div>
+
+    <button class="primary" onclick="startReset()">เริ่ม Reset 5 นาที</button>
+    <p class="small">ไม่ต้องสมัครสมาชิก • ไม่เก็บข้อมูลส่วนตัว</p>
+  </section>
+
+  <!-- ACTIVITY -->
+  <section id="activityScreen" class="card hidden">
+    <div class="activity">
+      <div id="activityIcon" class="activity-icon">🙆</div>
+      <p id="stepText">กิจกรรมที่ 1/5</p>
+      <h2 id="activityName">ยืดคอและไหล่</h2>
+      <p id="instruction" class="instruction"></p>
+      <div class="timer" id="timer">01:00</div>
+    </div>
+
+    <div class="progress"><div id="bar" class="bar"></div></div>
+
+    <button class="primary" id="nextBtn" onclick="nextActivity()">เสร็จแล้ว →</button>
+    <button class="secondary" onclick="skipActivity()">ข้ามกิจกรรม</button>
+  </section>
+
+  <!-- COMPLETE -->
+  <section id="complete" class="card complete hidden">
+    <div class="complete-icon">🎉</div>
+    <h1>Reset Complete!</h1>
+    <p class="subtitle">
+      คุณใช้เวลา 5 นาทีในการดูแลตัวเอง<br>
+      พร้อมกลับไปเรียนต่อแล้วหรือยัง?
+    </p>
+    <button class="primary" onclick="goHome()">กลับหน้าหลัก</button>
+  </section>
+
+</div>
+
+<script>
+const activities = {
+  eye: [
+    ["👁️","พักสายตา","มองออกไปไกล ๆ ประมาณ 20 ฟุตหรือมองไปยังจุดที่อยู่ไกลจากหน้าจอ แล้วผ่อนคลายสายตา","01:00"],
+    ["🙆","คลายคอ","ค่อย ๆ เอียงศีรษะไปด้านซ้ายและขวาอย่างนุ่มนวล ไม่ฝืนหรือกระตุก","01:00"],
+    ["💆","ผ่อนคลายไหล่","ยกไหล่ขึ้นเบา ๆ แล้วปล่อยลง ทำซ้ำช้า ๆ พร้อมหายใจสบาย ๆ","01:00"],
+    ["🤲","ยืดมือและข้อมือ","เหยียดแขนไปด้านหน้าและขยับข้อมือเบา ๆ เพื่อคลายความตึง","01:00"],
+    ["🫁","หายใจผ่อนคลาย","หายใจเข้าช้า ๆ แล้วหายใจออกยาว ๆ ทำซ้ำอย่างสบาย ไม่ต้องกลั้นหายใจ","01:00"]
+  ],
+  body: [
+    ["🙆","ยืดคอ","ค่อย ๆ เอียงศีรษะซ้ายและขวาอย่างนุ่มนวล โดยไม่ฝืน","01:00"],
+    ["💪","คลายไหล่","หมุนหัวไหล่ไปด้านหลังช้า ๆ แล้วผ่อนคลาย","01:00"],
+    ["🤲","ยืดข้อมือ","เหยียดแขนและขยับข้อมือเบา ๆ เพื่อคลายความตึง","01:00"],
+    ["🧍","ลุกขึ้นยืดตัว","ลุกขึ้นยืน ยืดแขนขึ้นเหนือศีรษะ และยืดตัวอย่างสบาย ๆ","01:00"],
+    ["🫁","หายใจผ่อนคลาย","หายใจเข้าและออกช้า ๆ พร้อมปล่อยความตึงของร่างกาย","01:00"]
+  ],
+  stress: [
+    ["🫁","หายใจช้า ๆ","หายใจเข้าอย่างสบาย แล้วค่อย ๆ หายใจออกยาวขึ้น โดยไม่ฝืน","01:00"],
+    ["🧘","ผ่อนคลายร่างกาย","นั่งในท่าที่สบาย คลายไหล่ มือ และกราม แล้วหายใจตามธรรมชาติ","01:00"],
+    ["👁️","พักจากหน้าจอ","ละสายตาจากหน้าจอ มองสิ่งที่อยู่ไกลออกไปและพักสายตา","01:00"],
+    ["🙆","คลายคอและไหล่","ขยับคอและไหล่อย่างช้า ๆ ในช่วงที่รู้สึกสบาย","01:00"],
+    ["✨","ตั้งใจกลับมา","หายใจเข้าและออกช้า ๆ แล้วเตรียมตัวกลับไปทำกิจกรรมต่อ","01:00"]
+  ],
+  random: [
+    ["🙆","ยืดคอและไหล่","ค่อย ๆ ขยับคอและไหล่เพื่อคลายความตึง","01:00"],
+    ["👁️","พักสายตา","มองออกไปไกลจากหน้าจอและผ่อนคลายสายตา","01:00"],
+    ["🤲","ยืดมือและข้อมือ","เหยียดแขนและขยับข้อมือเบา ๆ","01:00"],
+    ["🧍","ยืดตัว","ลุกขึ้นยืน ยืดแขนและลำตัวอย่างสบาย ๆ","01:00"],
+    ["🫁","ฝึกหายใจ","หายใจเข้าและออกช้า ๆ พร้อมผ่อนคลายร่างกาย","01:00"]
+  ]
+};
+
+let selectedMode = "random";
+let current = 0;
+let timerSeconds = 60;
+let timerInterval = null;
+let currentActivities = [];
+
+function selectMode(button){
+  document.querySelectorAll(".choice").forEach(b=>b.classList.remove("selected"));
+  button.classList.add("selected");
+  selectedMode = button.dataset.mode;
+}
+
+function startReset(){
+  currentActivities = [...activities[selectedMode]];
+  current = 0;
+  show("activityScreen");
+  showActivity();
+}
+
+function showActivity(){
+  clearInterval(timerInterval);
+  const a = currentActivities[current];
+
+  document.getElementById("activityIcon").textContent = a[0];
+  document.getElementById("activityName").textContent = a[1];
+  document.getElementById("instruction").textContent = a[2];
+  document.getElementById("stepText").textContent =
+    `กิจกรรมที่ ${current+1}/${currentActivities.length}`;
+
+  document.getElementById("bar").style.width =
+    `${(current/currentActivities.length)*100}%`;
+
+  timerSeconds = 60;
+  updateTimer();
+
+  timerInterval = setInterval(()=>{
+    timerSeconds--;
+    updateTimer();
+
+    if(timerSeconds <= 0){
+      clearInterval(timerInterval);
+      document.getElementById("nextBtn").textContent =
+        current === currentActivities.length-1 ? "เสร็จสิ้น 🎉" : "กิจกรรมถัดไป →";
+    }
+  },1000);
+
+  document.getElementById("nextBtn").textContent = "เสร็จแล้ว →";
+}
+
+function updateTimer(){
+  const min = String(Math.floor(timerSeconds/60)).padStart(2,"0");
+  const sec = String(timerSeconds%60).padStart(2,"0");
+  document.getElementById("timer").textContent = `${min}:${sec}`;
+}
+
+function nextActivity(){
+  clearInterval(timerInterval);
+
+  if(current >= currentActivities.length-1){
+    show("complete");
+    return;
+  }
+
+  current++;
+  showActivity();
+}
+
+function skipActivity(){
+  clearInterval(timerInterval);
+
+  if(current >= currentActivities.length-1){
+    show("complete");
+    return;
+  }
+
+  current++;
+  showActivity();
+}
+
+function goHome(){
+  clearInterval(timerInterval);
+  show("home");
+}
+
+function show(id){
+  ["home","activityScreen","complete"].forEach(x=>{
+    document.getElementById(x).classList.add("hidden");
+  });
+  document.getElementById(id).classList.remove("hidden");
+}
+</script>
+</body>
+</html>
